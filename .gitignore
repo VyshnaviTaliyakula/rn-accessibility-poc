@@ -37,8 +37,8 @@ yarn-error.*
 *.tsbuildinfo
 
 # Native build artifacts
-/ios/
-/android/
+# /ios/
+# /android/
 /ios/Pods/
 /ios/build/
 /ios/DerivedData/
