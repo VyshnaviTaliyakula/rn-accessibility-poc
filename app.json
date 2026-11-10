@@ -20,7 +20,10 @@
       "predictiveBackGestureEnabled": false,
       "package": "com.ekshitha.rnaccessibilitypoc"
     },
-    "plugins": ["./plugins/withAndroidAccessibilityTests"],
+    "plugins": [
+      "./plugins/withAndroidAccessibilityTests",
+      "./plugins/withIosAccessibilityTests"
+    ],
     "web": {
       "favicon": "./assets/favicon.png"
     }

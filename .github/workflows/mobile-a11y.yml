@@ -80,7 +80,7 @@ jobs:
           test -f "$ANDROID_HOME/ndk/27.1.12297006/source.properties"
 
       - name: Generate Android project and accessibility tests
-        run: npx expo prebuild --platform android --no-install
+        run: npx expo prebuild --platform android --clean --no-install
 
       - name: Enable Gradle wrapper
         run: chmod +x android/gradlew
@@ -114,8 +114,10 @@ jobs:
 
   ios-accessibility:
     name: iOS Native Accessibility (XCTest)
-    runs-on: macos-15
+    runs-on: macos-26
     timeout-minutes: 60
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_26.6.app/Contents/Developer
 
     steps:
       - name: Checkout repository
@@ -136,7 +138,7 @@ jobs:
           xcrun simctl list devices available
 
       - name: Generate iOS native project
-        run: npx expo prebuild --platform ios --no-install
+        run: npx expo prebuild --platform ios --clean --no-install
 
       - name: Install CocoaPods dependencies
         working-directory: ios
@@ -153,8 +155,11 @@ jobs:
 
           xcodebuild test \
             -workspace ios/rnaccessibilitypoc.xcworkspace \
-            -scheme rnaccessibilitypoc \
-            -destination 'platform=iOS Simulator,name=iPhone 16 Pro' \
+            -scheme AccessibilityAudit \
+            -configuration Release \
+            -destination 'platform=iOS Simulator,name=iPhone 17 Pro,OS=26.5' \
+            -parallel-testing-enabled NO \
+            -only-testing:AccessibilityUITests \
             -derivedDataPath ios/DerivedData \
             -resultBundlePath ios/AccessibilityResults.xcresult \
             CODE_SIGNING_ALLOWED=NO
