@@ -111,3 +111,58 @@ jobs:
             android/app/build/reports/androidTests/
             android/app/build/outputs/androidTest-results/
           if-no-files-found: ignore
+
+  ios-accessibility:
+    name: iOS Native Accessibility (XCTest)
+    runs-on: macos-15
+    timeout-minutes: 60
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Check Xcode and simulators
+        run: |
+          xcodebuild -version
+          xcrun simctl list devices available
+
+      - name: Generate iOS native project
+        run: npx expo prebuild --platform ios --no-install
+
+      - name: Install CocoaPods dependencies
+        working-directory: ios
+        run: pod install
+
+      - name: Verify Xcode schemes
+        run: |
+          xcodebuild -list \
+            -workspace ios/rnaccessibilitypoc.xcworkspace
+
+      - name: Run iOS Accessibility Tests
+        run: |
+          set -o pipefail
+
+          xcodebuild test \
+            -workspace ios/rnaccessibilitypoc.xcworkspace \
+            -scheme rnaccessibilitypoc \
+            -destination 'platform=iOS Simulator,name=iPhone 16 Pro' \
+            -derivedDataPath ios/DerivedData \
+            -resultBundlePath ios/AccessibilityResults.xcresult \
+            CODE_SIGNING_ALLOWED=NO
+
+      - name: Upload iOS Accessibility Reports
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: ios-accessibility-reports
+          path: ios/AccessibilityResults.xcresult
+          if-no-files-found: ignore
