@@ -27,6 +27,7 @@ export default function App() {
         style={styles.input}
         placeholder="Enter email"
         accessibilityLabel="Email address"
+        accessibilityHint="Enter your registered email address"
         autoCapitalize="none"
         keyboardType="email-address"
         value={email}
@@ -37,6 +38,7 @@ export default function App() {
       <TextInput
         style={styles.input}
         placeholder="Enter password"
+        accessibilityHint="Enter your registered account password"
         accessibilityLabel="Password"
         secureTextEntry
         value={password}
