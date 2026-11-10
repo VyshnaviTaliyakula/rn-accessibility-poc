@@ -7,6 +7,7 @@ import {
   Pressable,
   StyleSheet,
   Alert,
+  Platform,
 } from 'react-native';
 
 export default function App() {
@@ -22,11 +23,12 @@ export default function App() {
         Accessibility Testing PoC
       </Text>
 
-      <Text style={styles.label}>Email</Text>
+      <Text nativeID="emailLabel" style={styles.label}>Email address</Text>
       <TextInput
         style={styles.input}
         placeholder="Enter email"
-        accessibilityLabel="Email address"
+        accessibilityLabel={Platform.OS === 'android' ? undefined : 'Email address'}
+        accessibilityLabelledBy="emailLabel"
         accessibilityHint="Enter your registered email address"
         autoCapitalize="none"
         keyboardType="email-address"
@@ -34,12 +36,13 @@ export default function App() {
         onChangeText={setEmail}
       />
 
-      <Text style={styles.label}>Password</Text>
+      <Text nativeID="passwordLabel" style={styles.label}>Password</Text>
       <TextInput
         style={styles.input}
         placeholder="Enter password"
         accessibilityHint="Enter your registered account password"
-        accessibilityLabel="Password"
+        accessibilityLabel={Platform.OS === 'android' ? undefined : 'Password'}
+        accessibilityLabelledBy="passwordLabel"
         secureTextEntry
         value={password}
         onChangeText={setPassword}
