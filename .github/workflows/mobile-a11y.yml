@@ -68,10 +68,16 @@ jobs:
 
       - name: Install Android SDK packages
         run: |
+          # Match Expo 58 / React Native 0.88 compileSdk=37 and buildTools=37.0.0.
+          # The SDK repository names this platform android-37.0, not android-37.
+          # This compile SDK is independent of the API 36 emulator below.
           sdkmanager --install \
-            "platforms;android-37" \
+            "platforms;android-37.0" \
             "build-tools;37.0.0" \
             "ndk;27.1.12297006"
+          test -f "$ANDROID_HOME/platforms/android-37.0/android.jar"
+          test -f "$ANDROID_HOME/build-tools/37.0.0/source.properties"
+          test -f "$ANDROID_HOME/ndk/27.1.12297006/source.properties"
 
       - name: Generate Android project and accessibility tests
         run: npx expo prebuild --platform android --no-install
