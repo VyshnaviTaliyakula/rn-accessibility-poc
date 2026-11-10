@@ -12,14 +12,14 @@ on:
 jobs:
   accessibility-tests:
     name: ESLint, TypeScript & Jest
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: '22'
           cache: npm
@@ -38,15 +38,15 @@ jobs:
 
   android-accessibility:
     name: Android Native Accessibility (Espresso)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 60
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: '22'
           cache: npm
@@ -55,13 +55,16 @@ jobs:
         run: npm ci
 
       - name: Setup Java 17
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v6
         with:
           distribution: zulu
           java-version: '17'
 
       - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
+        uses: android-actions/setup-android@v4
+        with:
+          packages: platform-tools
+          log-accepted-android-sdk-licenses: false
 
       - name: Install Android SDK packages
         run: |
@@ -70,8 +73,17 @@ jobs:
             "build-tools;37.0.0" \
             "ndk;27.1.12297006"
 
+      - name: Generate Android project and accessibility tests
+        run: npx expo prebuild --platform android --no-install
+
       - name: Enable Gradle wrapper
         run: chmod +x android/gradlew
+
+      - name: Enable KVM for the emulator
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
 
       - name: Run Android Accessibility Tests
         uses: reactivecircus/android-emulator-runner@v2
@@ -82,13 +94,11 @@ jobs:
           profile: pixel_6
           emulator-boot-timeout: 600
           disable-animations: true
-          script: |
-            cd android
-            ./gradlew connectedDebugAndroidTest --console=plain
+          script: npm run test:android -- -PreactNativeArchitectures=x86_64
 
       - name: Upload Android test reports
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: android-accessibility-reports
           path: |

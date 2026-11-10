@@ -20,6 +20,7 @@
       "predictiveBackGestureEnabled": false,
       "package": "com.ekshitha.rnaccessibilitypoc"
     },
+    "plugins": ["./plugins/withAndroidAccessibilityTests"],
     "web": {
       "favicon": "./assets/favicon.png"
     }
