@@ -6,7 +6,7 @@ cd "$(dirname "$0")/.."
 # Require a single device, or select one with ANDROID_SERIAL.
 adb get-state >/dev/null
 metro_pid=""
-metro_log=$(mktemp -t accessibility-metro)
+metro_log=$(mktemp "${TMPDIR:-/tmp}/accessibility-metro.XXXXXX")
 cleanup() {
   if [ -n "$metro_pid" ]; then
     kill "$metro_pid" 2>/dev/null || true
