@@ -1,25 +1,43 @@
 {
   "name": "rn-accessibility-poc",
   "version": "1.0.0",
+  "engines": { "node": ">=22.19.0" },
   "main": "index.ts",
   "dependencies": {
+    "@expo/metro-runtime": "~58.0.17",
     "expo": "~58.0.23",
     "expo-status-bar": "~58.0.4",
     "react": "19.3.0",
-    "react-native": "0.88.1"
+    "react-dom": "19.3.0",
+    "react-native": "0.88.1",
+    "react-native-web": "^0.21.4"
   },
   "jest": {
-    "preset": "jest-expo"
+    "preset": "jest-expo",
+    "testPathIgnorePatterns": [
+      "/node_modules/",
+      "/tests/web/",
+      "/tests/e2e/"
+    ]
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.14.0",
     "@eslint/js": "^8.57.1",
+    "@lhci/cli": "^0.16.1",
+    "@playwright/test": "^1.65.1",
+    "@testing-library/dom": "^10.4.2",
+    "@testing-library/jest-dom": "^7.0.1",
+    "@testing-library/react": "^16.3.3",
     "@testing-library/react-native": "^14.1.0",
+    "@testing-library/user-event": "^14.6.10",
     "@types/jest": "^30.0.0",
     "@types/react": "~19.3.0",
     "@typescript-eslint/parser": "^8.72.2",
     "eslint": "^8.57.1",
     "eslint-plugin-react-native-a11y": "^3.5.1",
     "jest": "~30.5.2",
+    "jest-axe": "^11.0.0",
+    "jest-environment-jsdom": "^30.5.2",
     "jest-expo": "~58.0.14",
     "typescript": "~6.0.3",
     "typescript-eslint": "^8.72.2"
@@ -31,7 +49,12 @@
     "web": "expo start --web",
     "test": "jest",
     "test:android": "bash scripts/test-android.sh",
-    "lint:a11y": "eslint App.tsx"
+    "lint:a11y": "eslint App.tsx hooks/*.ts *.config.ts lighthouserc.ts scripts/run-lighthouse.ts",
+    "test:web": "jest --config jest.web.config.ts",
+    "build:web": "expo export --platform web",
+    "test:web:e2e": "playwright test",
+    "test:web:lighthouse": "node scripts/run-lighthouse.ts",
+    "typecheck": "tsc --noEmit"
   },
   "private": true
 }

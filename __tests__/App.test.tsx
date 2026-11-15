@@ -1,9 +1,20 @@
 
 import React from 'react';
-import { render } from '@testing-library/react-native';
+import { fireEvent, render } from '@testing-library/react-native';
+import { Alert } from 'react-native';
 import App from '../App';
 
 describe('Login Screen Accessibility', () => {
+  test('native sign in keeps the alert behaviour without browser APIs', async () => {
+    const alert = jest.spyOn(Alert, 'alert').mockImplementation(() => {});
+    try {
+      const { getByRole } = await render(<App />);
+      await fireEvent.press(getByRole('button', { name: 'Sign in' }));
+      expect(alert).toHaveBeenCalledWith('Sign in pressed');
+    } finally {
+      alert.mockRestore();
+    }
+  });
  test('screen has an accessible heading', async () => {
   const { getByRole } = await render(<App />);
 
