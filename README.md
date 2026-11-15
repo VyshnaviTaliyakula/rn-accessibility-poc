@@ -32,7 +32,7 @@ npm run test:web:lighthouse
 ```
 
 Playwright serves the production export on port 8082, separately from the
-development server on 8081. The web GitHub Actions workflow runs these checks
+development server on 8081. The combined GitHub Actions workflow runs these checks
 and uploads reports. Browser scans include contrast; JSDOM scans exclude
 contrast because JSDOM cannot evaluate it. Manual screen-reader, zoom, and
 text-resizing checks are still required. Sign-in is a demo, not authentication.
@@ -89,11 +89,20 @@ before running it, and review the resulting Git diff afterward.
 
 ## GitHub Actions
 
-Pushes and pull requests to `main` run three jobs:
+The **Mobile & Web Accessibility CI** workflow in
+`.github/workflows/mobile-a11y.yml` runs on pushes and pull requests targeting
+`main`, and can also be started manually. Its four independent jobs are:
 
-1. ESLint, TypeScript, and Jest component tests.
+1. ESLint and TypeScript once, plus native and web Jest component tests.
 2. Android native accessibility audits on an Ubuntu emulator.
 3. iOS native accessibility audits on a macOS simulator.
+4. Web production export, Playwright/axe browser tests, and Lighthouse on Ubuntu.
+
+All four jobs appear in one workflow summary and can run in parallel. The
+separate `web-a11y.yml` workflow has been removed to prevent duplicate runs.
+Unit, Android, iOS, and web reports use distinct artifact names; uploads run
+even after test failures when reports exist. The unit and web artifacts are
+retained for 14 days. Native jobs keep their existing report upload settings.
 
 Both native jobs regenerate projects from the tracked configuration, then execute
 the native audits. They upload test results even when tests fail. Accessibility
