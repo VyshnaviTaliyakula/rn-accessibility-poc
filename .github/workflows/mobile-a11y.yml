@@ -37,11 +37,15 @@ jobs:
         run: npm run typecheck
 
       - name: Native accessibility component tests
-        run: npm test -- --ci --runInBand --json --outputFile=test-results/native-unit.json
+        run: |
+          mkdir -p test-results
+          npm test -- --ci --runInBand --json --outputFile=test-results/native-unit.json
 
       - name: Web DOM accessibility tests
         if: ${{ !cancelled() && steps.dependencies.outcome == 'success' }}
-        run: npm run test:web -- --ci --runInBand --json --outputFile=test-results/web-unit.json
+        run: |
+          mkdir -p test-results
+          npm run test:web -- --ci --runInBand --json --outputFile=test-results/web-unit.json
 
       - name: Upload unit test reports
         if: always()
