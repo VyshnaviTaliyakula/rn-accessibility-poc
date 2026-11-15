@@ -1,9 +1,47 @@
 # React Native accessibility testing
 
-This Expo SDK 58 app uses Continuous Native Generation (CNG). Native projects are
-generated from `app.json` and the config plugins, rather than maintained in Git.
-The local `ios/` and `android/` folders remain available for Xcode, Android tools,
-and debugging, but are ignored by Git.
+## Shared mobile and web screen
+
+Use Node.js 22.19 or newer. Web tool configuration lives in
+`jest.web.config.ts`, `playwright.config.ts`, and `lighthouserc.ts`.
+Jest uses Node's native TypeScript support and Playwright loads TypeScript
+directly. Lighthouse runs through `scripts/run-lighthouse.ts`, which writes
+a temporary JSON config for LHCI and removes it after the command exits.
+Use `npm run test:web:lighthouse` so this configuration is always loaded.
+
+`App.tsx` renders the same React Native components on iOS, Android, and web.
+React Native Web supplies the browser DOM. `useWindowDimensions()` selects a
+centred 440px web form at window widths of 768px and above; narrower windows
+and native screens use the available width with 24px padding on each side.
+The web form supports keyboard submission, announced validation errors with focus recovery,
+and a live demo status; native platforms retain the sign-in alert.
+`hooks/useWebAccessibility.ts` manages the browser title, document language,
+and focus outlines. Its effect checks the platform and document availability
+before accessing browser APIs, so it safely skips setup on iOS and Android.
+There is a single hook file and no separate native fallback.
+
+Run the web checks locally:
+
+```sh
+npm run lint:a11y
+npm run typecheck
+npm run test:web -- --runInBand --watchman=false
+npm run build:web
+npm run test:web:e2e
+npm run test:web:lighthouse
+```
+
+Playwright serves the production export on port 8082, separately from the
+development server on 8081. The combined GitHub Actions workflow runs these checks
+and uploads reports. Browser scans include contrast; JSDOM scans exclude
+contrast because JSDOM cannot evaluate it. Manual screen-reader, zoom, and
+text-resizing checks are still required. Sign-in is a demo, not authentication.
+
+This Expo SDK 58 repository currently tracks the `ios/` and `android/` native
+projects. Native build outputs and caches are ignored by Git. App configuration
+and config plugins can regenerate these projects; CI regenerates them before
+running the native audits. Keep changes needed after regeneration in app
+configuration, plugins, or the tracked `native-tests/` sources as appropriate.
 
 ## Test source files
 
@@ -45,16 +83,26 @@ Open the generated workspace in Xcode and select the shared `AccessibilityAudit`
 scheme, or use the command in `native-tests/ios/README.md`. That scheme tests the
 `AccessibilityUITests` target in Release configuration, using bundled JavaScript.
 
-Clean prebuild replaces native projects. Put permanent native changes in app
-configuration or config plugins before regenerating.
+Clean prebuild replaces native projects, including tracked native source files.
+Review and preserve any native customizations in configuration or config plugins
+before running it, and review the resulting Git diff afterward.
 
 ## GitHub Actions
 
-Pushes and pull requests to `main` run three jobs:
+The **Mobile & Web Accessibility CI** workflow in
+`.github/workflows/mobile-a11y.yml` runs on pushes and pull requests targeting
+`main`, and can also be started manually. Its four independent jobs are:
 
-1. ESLint, TypeScript, and Jest component tests.
+1. ESLint and TypeScript once, plus native and web Jest component tests.
 2. Android native accessibility audits on an Ubuntu emulator.
 3. iOS native accessibility audits on a macOS simulator.
+4. Web production export, Playwright/axe browser tests, and Lighthouse on Ubuntu.
+
+All four jobs appear in one workflow summary and can run in parallel. The
+separate `web-a11y.yml` workflow has been removed to prevent duplicate runs.
+Unit, Android, iOS, and web reports use distinct artifact names; uploads run
+even after test failures when reports exist. The unit and web artifacts are
+retained for 14 days. Native jobs keep their existing report upload settings.
 
 Both native jobs regenerate projects from the tracked configuration, then execute
 the native audits. They upload test results even when tests fail. Accessibility

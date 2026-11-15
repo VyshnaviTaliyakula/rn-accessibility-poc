@@ -1,6 +1,4 @@
-
-
-name: React Native Accessibility CI
+name: Mobile & Web Accessibility CI
 
 on:
   push:
@@ -9,10 +7,14 @@ on:
     branches: [main]
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   accessibility-tests:
     name: ESLint, TypeScript & Jest
     runs-on: ubuntu-24.04
+    timeout-minutes: 20
 
     steps:
       - name: Checkout repository
@@ -25,16 +27,34 @@ jobs:
           cache: npm
 
       - name: Install dependencies
+        id: dependencies
         run: npm ci
 
       - name: Accessibility ESLint
         run: npm run lint:a11y
 
       - name: TypeScript validation
-        run: npx tsc --noEmit
+        run: npm run typecheck
 
-      - name: Accessibility component tests
-        run: npm test -- --ci --watch=false
+      - name: Native accessibility component tests
+        run: |
+          mkdir -p test-results
+          npm test -- --ci --runInBand --json --outputFile=test-results/native-unit.json
+
+      - name: Web DOM accessibility tests
+        if: ${{ !cancelled() && steps.dependencies.outcome == 'success' }}
+        run: |
+          mkdir -p test-results
+          npm run test:web -- --ci --runInBand --json --outputFile=test-results/web-unit.json
+
+      - name: Upload unit test reports
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: accessibility-unit-test-reports
+          path: test-results/*-unit.json
+          if-no-files-found: ignore
+          retention-days: 14
 
   android-accessibility:
     name: Android Native Accessibility (Espresso)
@@ -111,6 +131,53 @@ jobs:
             android/app/build/reports/androidTests/
             android/app/build/outputs/androidTest-results/
           if-no-files-found: ignore
+
+  web-accessibility:
+    name: Web accessibility checks
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install browser
+        run: npx playwright install --with-deps chromium
+
+      - name: Export web app
+        id: export
+        run: npm run build:web
+
+      - name: Browser accessibility tests
+        run: npm run test:web:e2e
+
+      - name: Lighthouse accessibility audit
+        if: ${{ !cancelled() && steps.export.outcome == 'success' }}
+        env:
+          CHROME_PATH: /usr/bin/google-chrome
+        run: npm run test:web:lighthouse
+
+      - name: Upload web accessibility reports
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: web-accessibility-reports
+          path: |
+            playwright-report/
+            test-results/
+            .lighthouseci/
+            lighthouse-report/
+          if-no-files-found: ignore
+          retention-days: 14
 
   ios-accessibility:
     name: iOS Native Accessibility (XCTest)

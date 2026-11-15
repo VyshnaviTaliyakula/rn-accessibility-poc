@@ -49,3 +49,7 @@ yarn-error.*
 /android/local.properties
 /android/.cxx/
 /android/app/debug.keystore
+/playwright-report/
+/test-results/
+/.lighthouseci/
+/lighthouse-report/
